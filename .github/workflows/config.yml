@@ -9,22 +9,22 @@ jobs:
   deploy:
     runs-on: macos-latest
     steps:
-      - name: Checkout code
+      - name: Checkout code # Checkout code from repo
         uses: actions/checkout@v2
 
-      - name: Cancel Previous runs
+      - name: Cancel Previous runs # Cancel any previous runs on this workflow
         uses: styfle/cancel-workflow-action@0.9.1
         with:
           access_token: ${{ github.token }}
 
-      - name: Set up Xcode
+      - name: Set up Xcode # Set up build environment
         uses: apple/setup-xcode@v2
         with:
           xcode-version: '13.2.1'
 
       - uses: ruby/setup-ruby@v1
 
-      - name: Install dependencies
+      - name: Install dependencies # install bundler
         run: |
           bundle install
           pod install
