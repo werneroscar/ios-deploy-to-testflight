@@ -1,0 +1,55 @@
+name: Deploy to TestFlight
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Cancel Previous runs
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Set up Xcode
+        uses: apple/setup-xcode@v2
+        with:
+          xcode-version: '13.2.1'
+
+      - uses: ruby/setup-ruby@v1
+
+      - name: Install dependencies
+        run: |
+          bundle install
+          pod install
+
+      - name: Build and archive app
+        run: xcodebuild -workspace MyProject.xcworkspace -scheme MyScheme -destination 'generic/platform=iOS' -archivePath MyProject.xcarchive archive
+
+      - name: Export archive for distribution
+        run: xcodebuild -exportArchive -archivePath MyProject.xcarchive -exportPath MyProject.ipa -exportOptionsPlist ExportOptions.plist
+
+      # - name: Swift Packages Cache
+      #   uses: actions/cache@v2
+      #   id: cache
+      #   with:
+      #     path: |
+      #       Build/SourcePackages
+      #       Build/Build/Products
+      #     key: ${{ runner.os }}-deps-v1-${{ hashFiles('BILDsolid.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+      #     restore-keys: ${{ runner.os }}-deps-v1-
+
+      - name: Upload to TestFlight
+        uses: apple/testflight-upload@v1
+        with:
+          app_file: MyProject.ipa
+          api_key: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+          issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          app_id: ${{ secrets.APP_STORE_CONNECT_APP_ID }}
+          groups: 'Internal Testers'
